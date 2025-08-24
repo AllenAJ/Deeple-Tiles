@@ -6,7 +6,7 @@
 
 # Deeple Tiles – Rhythm + Onchain + AI (Shape MCP Demo)
 
-Built for the AI × NFT on Shape hackathon: an autonomous AI musician agent that composes melodies, mints them as on‑chain music cards, and challenges players to perform them. The prototype demonstrates innovation in AI‑driven NFT creation, on‑chain provenance, and community curation.
+Built for the AI × NFT on Shape hackathon: an autonomous AI musician agent that composes melodies, mints them as on‑chain music cards, and challenges players to perform them & the creators get gasback if others play their notes. The prototype demonstrates innovation in AI‑driven NFT creation, on‑chain provenance, and community curation.
 
 Next.js 15 app with Shape Sepolia, Wagmi/RainbowKit, Viem, and the Shape MCP toolchain. Includes an ERC‑721 (`contracts/DeepleTiles.sol`) with compact on‑chain meta (`mintWithMeta` + `notesHash`) and demo leaderboard events.
 
@@ -31,6 +31,16 @@ Built for the AI × NFT on Shape hackathon. Novel AI composition + onchain prove
 - Impact: Shareable onchain challenges with provenance, creator tips, and a `/public` gallery; easy to extend with Shape primitives.
 - Design: Compact shadcn UI, holo cards, featured grid, chat‑like AI steps, clear CTAs.
 
+## AI Agent — Keyboard‑to‑sound pipeline
+
+- The agent compiles a time‑quantized performance plan (ms‑accurate), aligning each symbolic note to lane indices 0–9. Each lane maps to a discrete timbre in `@/sound` (`keyboard0.mp3` … `keyboard9.mp3`).
+- On load it warm‑primes the Web Audio graph: one master `AudioContext`, all lane buffers pre‑decoded to `AudioBuffer`s, lane `GainNode`s and optional `StereoPannerNode`s, plus a gentle master compressor.
+- Dual clocks for precision: visuals via `requestAnimationFrame`; audio scheduling locked to `AudioContext.currentTime`. Keystrokes (`Digit0`–`Digit9`) are phase‑aligned with a rolling median input‑latency offset and a micro look‑ahead for sub‑frame accuracy.
+- Adaptive expressivity: per‑hit dynamic gain curves (brighter transients for on‑time hits), alternating lane panning for separation, anti‑mud heuristics (1–3 ms micro‑stagger in dense clusters) and momentary bus ducking to preserve headroom.
+- Predictive prefetch: knowing future notes, it pre‑allocates/recycles source nodes to minimize GC pressure and throttles visuals before audio to keep playback click‑free under load.
+- Error‑tolerant reconciliation: near‑miss hits snap audibly to the nearest quantized grid within a tight threshold; overlapping same‑lane hits spawn parallel sources with per‑instance gain to avoid inter‑sample clipping.
+- File semantics: lane i → `keyboardi.mp3` in `@/sound` ensures deterministic timbre identity and cache locality.
+- Provenance: the executed note lattice (lane indices + timing deltas) is hashed as `notesHash` for on‑chain binding between what was heard and what was performed.
 
 ## App structure
 
@@ -86,7 +96,7 @@ lib/                  # web3 + config + music gen utilities
 - Each card renders:
   - Title = compressed contract address (e.g., `0xC5.....18F`) if configured, else fallback
   - Notes list `[...]`
-  - “Pay 0.00001 and play” button
+  - “Pay 0.00001 and play” button, this will be a gasback contract to the creator
 - The button sends 0.00001 ETH to the creator (or fallback), saves the notes as a generated composition, and routes to `/game` (auto‑starts).
 
 ## Onchain contract – `contracts/DeepleTiles.sol`
@@ -98,7 +108,6 @@ lib/                  # web3 + config + music gen utilities
   - `tipCreator(uint256 tokenId)` – forward ETH tips to card creator
 - View helpers: `getCard`, `getLeaderboard`, `getLeaderboardLength`
 
-> Note: for the hackathon demo we keep “on‑chain‑like” meta compact and push full JSON as `tokenURI`. You can extend this to a full metadata pipeline (IPFS/Arweave) later.
 
 ## Environment variables
 
@@ -109,14 +118,13 @@ NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=...
 NEXT_PUBLIC_ALCHEMY_KEY=...
 NEXT_PUBLIC_CHAIN_ID=11011                   # Shape Sepolia
 NEXT_PUBLIC_MCP_SERVER_URL=https://shape-mcp-server.vercel.app/mcp
-NEXT_PUBLIC_DEEPLE_NFT_ADDRESS=0x...         # deployed DeepleTiles
-OPENAI_API_KEY=...                           # optional; AI composer fallback exists
+NEXT_PUBLIC_DEEPLE_NFT_ADDRESS=0x743B0aa4f557C6c16C38f7D91Fa1a8968813B4Fc         # deployed DeepleTiles
+OPENAI_API_KEY=...                          
 ```
 
 ## Local development
 
 ```bash
-cd "MCP backend"
 # install deps
 npm install
 # dev
@@ -124,29 +132,6 @@ npm run dev
 ```
 
 Open http://localhost:3000/game
-
-## Foundry (contracts)
-
-```bash
-# install foundry
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
-
-# install OZ
-forge install OpenZeppelin/openzeppelin-contracts
-
-# build
-forge build
-
-# deploy (Shape Sepolia)
-export PRIVATE_KEY=0xYOUR_KEY
-export SHAPE_SEPOLIA_RPC_URL=https://sepolia.shape.network
-forge script script/DeepleTiles.s.sol:DeepleTilesScript --rpc-url $SHAPE_SEPOLIA_RPC_URL --broadcast
-```
-
-Then set `NEXT_PUBLIC_DEEPLE_NFT_ADDRESS` with the deployed address.
-
-## Deployment (Vercel)
 
 - Root Directory: `MCP backend`
 - Build: `next build`
@@ -160,11 +145,5 @@ Then set `NEXT_PUBLIC_DEEPLE_NFT_ADDRESS` with the deployed address.
 - Keys `1..0` – hit lanes
 - Ctrl+A – toggle Auto‑Play (dev/testing)
 
-## Notes
 
-- Holo effect uses CSS variables (`--mx`, `--my`, `--rx`, `--ry`, `--hyp`) and is attached to `.holo-card` via pointer handlers in each page.
-- `/public` pay‑to‑play uses `eth_sendTransaction` for a simple value transfer (demo tip); route then auto‑loads and starts the game with those notes.
-
-## License
-
-MIT
+## Thanks <3, I'd love to take this to production
