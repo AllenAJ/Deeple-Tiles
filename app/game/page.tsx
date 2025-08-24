@@ -465,6 +465,16 @@ export default function GamePage() {
           } catch (_) {}
 
           const txHash = await this.provider.request({ method: 'eth_sendTransaction', params: [tx] });
+          try {
+            // also add to leaderboard after a successful tx
+            const total = this.hits + this.misses;
+            const accuracy = total ? Math.round((this.hits / total) * 100) : 100;
+            await fetch('/api/leaderboard', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ song: this.currentSong, score: this.score, accuracy, hits: this.hits, misses: this.misses, ts: Date.now() }),
+            }).catch(() => {});
+          } catch {}
           window.alert(
             `Transaction sent to Shape Sepolia Testnet!\n\n` +
               `Hash: ${txHash}\n` +
@@ -755,6 +765,17 @@ export default function GamePage() {
 
         this.checkMisses();
 
+        // Robust finish detection for preset songs
+        if (this.currentSong !== 'random') {
+          const pat = this.songPatterns[this.currentSong];
+          const allSpawned = Array.isArray(pat) ? this.songNoteIndex >= pat.length : false;
+          if (allSpawned && this.notes.length === 0) {
+            this.gameRunning = false;
+            this.showOver();
+            return;
+          }
+        }
+
         if ((this.songEndTime || 0) <= elapsed && this.notes.length === 0) {
           this.gameRunning = false;
           this.showOver();
@@ -987,6 +1008,12 @@ export default function GamePage() {
           const res = await fetch('/api/publications', { method: 'POST', headers, body: JSON.stringify(payload) });
           const data = await res.json();
           if (!data?.success) throw new Error(data?.error || 'Publish failed');
+          // Copy Poink embed URL to clipboard
+          try {
+            const base = window.location.origin;
+            const embed = `https://app.poink.xyz/embed?url=${base}/preview`;
+            await navigator.clipboard.writeText(embed);
+          } catch {}
           window.location.href = '/public';
         } catch (e: any) { alert('Publish failed'); console.error(e); }
       }
