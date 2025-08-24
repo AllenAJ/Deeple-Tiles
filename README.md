@@ -33,14 +33,34 @@ Built for the AI × NFT on Shape hackathon. Novel AI composition + onchain prove
 
 ## AI Agent — Keyboard‑to‑sound pipeline
 
-- The agent compiles a time‑quantized performance plan (ms‑accurate), aligning each symbolic note to lane indices 0–9. Each lane maps to a discrete timbre in `@/sound` (`keyboard0.mp3` … `keyboard9.mp3`).
-- On load it warm‑primes the Web Audio graph: one master `AudioContext`, all lane buffers pre‑decoded to `AudioBuffer`s, lane `GainNode`s and optional `StereoPannerNode`s, plus a gentle master compressor.
-- Dual clocks for precision: visuals via `requestAnimationFrame`; audio scheduling locked to `AudioContext.currentTime`. Keystrokes (`Digit0`–`Digit9`) are phase‑aligned with a rolling median input‑latency offset and a micro look‑ahead for sub‑frame accuracy.
-- Adaptive expressivity: per‑hit dynamic gain curves (brighter transients for on‑time hits), alternating lane panning for separation, anti‑mud heuristics (1–3 ms micro‑stagger in dense clusters) and momentary bus ducking to preserve headroom.
-- Predictive prefetch: knowing future notes, it pre‑allocates/recycles source nodes to minimize GC pressure and throttles visuals before audio to keep playback click‑free under load.
-- Error‑tolerant reconciliation: near‑miss hits snap audibly to the nearest quantized grid within a tight threshold; overlapping same‑lane hits spawn parallel sources with per‑instance gain to avoid inter‑sample clipping.
-- File semantics: lane i → `keyboardi.mp3` in `@/sound` ensures deterministic timbre identity and cache locality.
-- Provenance: the executed note lattice (lane indices + timing deltas) is hashed as `notesHash` for on‑chain binding between what was heard and what was performed.
+In one sentence: keys map to lanes 0–9, lanes map to sounds in `public/bongo/sound/keyboard{0..9}.mp3`, and the AI helps with timing, mixing, and provenance.
+
+```mermaid
+flowchart LR
+  A["Keys 1–0 (user input)"] --> B["Lanes 0–9"]
+  B --> C["Load sounds from public/bongo/sound/keyboard{0..9}.mp3"]
+  C --> D["Play via Web Audio (AudioBufferSourceNode)"]
+  D --> E["Per‑lane Gain/Pan"]
+  E --> F["Master Mix (compress/limit)"]
+  F --> G["Speakers"]
+  subgraph "AI Agent assists"
+    X["Timing adjust (latency offset + quantize)"] --> D
+    Y["Mix shaping (anti‑mud, headroom)"] --> E
+    Z["Prefetch + reuse nodes"] --> C
+    H["Provenance hash (notesHash)"] -->|"on publish"| I["On‑chain card/meta"]
+  end
+```
+
+In plain words:
+- Keys 1–0 → lanes 0–9 → `keyboard{lane}.mp3` → Web Audio plays the sound.
+- The AI nudges timing (so hits sound crisp), keeps the mix clean in busy parts, and remembers what was played as a hash for on‑chain provenance.
+- Everything is preloaded so the first hit never stutters; visuals never block audio.
+
+References:
+- Web Audio API (MDN): https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+- AudioBufferSourceNode (MDN): https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
+- requestAnimationFrame (MDN): https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame
+- Sounds: `public/bongo/sound/keyboard0.mp3` … `public/bongo/sound/keyboard9.mp3`
 
 ## App structure
 
