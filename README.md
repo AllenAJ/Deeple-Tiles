@@ -165,5 +165,6 @@ Open http://localhost:3000/game
 - Keys `1..0` – hit lanes
 - Ctrl+A – toggle Auto‑Play (dev/testing)
 
+![Roadmap](public/cards/showcase2.png)
 
 ## Thanks <3, I'd love to take this to production
