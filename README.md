@@ -1,6 +1,6 @@
 ![Showcase](public/cards/showcase.png)
 
-<iframe style="border:0;" width="800" height="450" src="https://www.tella.tv/video/cmepntscg000s0cjrfhpw996v/embed?b=1&title=1&a=1&loop=0&t=0&muted=0&wt=1" allowfullscreen allowtransparency></iframe>
+[▶ Watch the 5‑min demo (Tella)](https://www.tella.tv/video/cmepntscg000s0cjrfhpw996v?b=1&title=1&a=1&loop=0&t=0&muted=0&wt=1)
 
 # Deeple Tiles – Rhythm + Onchain + AI (Shape MCP Demo)
 
