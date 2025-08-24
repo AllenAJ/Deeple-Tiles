@@ -2,13 +2,17 @@
 
 [▶ Watch the 5‑min demo (Tella)](https://www.tella.tv/video/cmepntscg000s0cjrfhpw996v?b=1&title=1&a=1&loop=0&t=0&muted=0&wt=1)
 
+[▶ Interact with the demo (Vercel)](https://deeple-tiles.vercel.app/game)
+
 # Deeple Tiles – Rhythm + Onchain + AI (Shape MCP Demo)
 
-A Next.js 15 app that turns melodies into playable rhythm challenges and onchain collectibles. Built on Shape Sepolia, Wagmi/RainbowKit, and the Shape MCP toolchain.
+Built for the AI × NFT on Shape hackathon: an autonomous AI musician agent that composes melodies, mints them as on‑chain music cards, and challenges players to perform them. The prototype demonstrates innovation in AI‑driven NFT creation, on‑chain provenance, and community curation.
 
-This repo contains the website and game (app directory). A minimal ERC‑721 contract (`contracts/DeepleTiles.sol`) is included for demo mints and “on‑chain‑like” storage.
+Next.js 15 app with Shape Sepolia, Wagmi/RainbowKit, Viem, and the Shape MCP toolchain. Includes an ERC‑721 (`contracts/DeepleTiles.sol`) with compact on‑chain meta (`mintWithMeta` + `notesHash`) and demo leaderboard events.
 
 ## Highlights
+
+Built for the AI × NFT on Shape hackathon. Novel AI composition + onchain provenance; working prototype with Shape primitives; clear UX for evaluation.
 
 - Play preset songs (Happy Birthday, Ode to Joy, etc.) or auto‑generated melodies
 - AI Composer page to generate a song from prompt or from your NFT image (optional OpenAI)
@@ -18,6 +22,15 @@ This repo contains the website and game (app directory). A minimal ERC‑721 con
 - Pay‑to‑play on `/public` (0.00001 ETH tip to creator before playing their notes)
 - Leaderboard (file‑backed for demo) and optional on‑chain `publishRun` in the contract
 - Poink embed link is copied on Publish for easy sharing
+
+## How it works (AI × NFT on Shape)
+
+- AI agent composes and mints “music cards” (`mintWithMeta` + `notesHash`), then hosts rhythm challenges; playable, tip‑able assets push AI x NFT boundaries.
+- AI Agent: Generates from mood/genre or wallet context (filters to Deeple Tiles); plans compose → review → mint → challenge → publish; adapts via manual difficulty and song selection.
+- Libraries: Next.js 15 + Wagmi/RainbowKit/Viem on Shape Sepolia (`eth_sendTransaction`, `encodeFunctionData`); Foundry + OpenZeppelin ERC‑721; `publishRun` events; server components + file‑backed stores.
+- Impact: Shareable onchain challenges with provenance, creator tips, and a `/public` gallery; easy to extend with Shape primitives.
+- Design: Compact shadcn UI, holo cards, featured grid, chat‑like AI steps, clear CTAs.
+
 
 ## App structure
 
